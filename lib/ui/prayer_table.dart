@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../calc/prayer_calculator.dart';
 import '../calc/time_format.dart';
 
-/// Darimi vs Karachi/Mujahid times; tap a row to see why they differ.
+/// Sunni, Karachi and Mujahid times side by side; tap a row for details.
 class PrayerTable extends StatelessWidget {
   const PrayerTable({super.key, required this.rows});
 
@@ -24,16 +24,17 @@ class PrayerTable extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(flex: 4, child: Text('Prayer', style: head)),
-                Expanded(
-                  flex: 3,
-                  child: Text('Darimi',
-                      style: head?.copyWith(color: theme.colorScheme.primary)),
-                ),
-                Expanded(flex: 3, child: Text('Karachi / Mujahid', style: head)),
-                Expanded(
-                  flex: 3,
-                  child: Text('Δ', style: head, textAlign: TextAlign.end),
-                ),
+                for (final m in Method.values)
+                  Expanded(
+                    flex: 3,
+                    child: Text(
+                      m.label,
+                      style:
+                          m == Method.sunni
+                              ? head?.copyWith(color: theme.colorScheme.primary)
+                              : head,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -42,8 +43,9 @@ class PrayerTable extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
             child: Text(
-              'Tap a prayer to see why. Δ = Darimi − Karachi. '
-              'Prayer times round up to the minute, sunrise rounds down.',
+              'Small figures: later (+) or earlier (−) than Sunni. Tap a '
+              'prayer for each method\'s rule and source. Prayer times round '
+              'up to the minute, sunrise rounds down.',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -67,15 +69,16 @@ class _PrayerTile extends StatefulWidget {
 class _PrayerTileState extends State<_PrayerTile> {
   bool _open = false;
 
-  String _time(double? v) =>
-      v == null ? '—' : hm(v, roundUp: widget.row.prayer.roundUp);
-
   @override
   Widget build(BuildContext context) {
     final row = widget.row;
     final theme = Theme.of(context);
-    final exact = 'Darimi ${row.darimi == null ? '—' : hms(row.darimi!)}  ·  '
-        'Karachi ${row.karachi == null ? '—' : hms(row.karachi!)}';
+    const tabular = [FontFeature.tabularFigures()];
+
+    String time(Method m) {
+      final t = row[m].time;
+      return t == null ? '—' : hm(t, roundUp: row.prayer.roundUp);
+    }
 
     return InkWell(
       onTap: () => setState(() => _open = !_open),
@@ -88,14 +91,17 @@ class _PrayerTileState extends State<_PrayerTile> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     flex: 4,
                     child: Row(
                       children: [
                         Flexible(
-                          child: Text(row.prayer.label,
-                              style: theme.textTheme.titleSmall),
+                          child: Text(
+                            row.prayer.label,
+                            style: theme.textTheme.titleSmall,
+                          ),
                         ),
                         Icon(
                           _open ? Icons.expand_less : Icons.expand_more,
@@ -108,58 +114,115 @@ class _PrayerTileState extends State<_PrayerTile> {
                   Expanded(
                     flex: 3,
                     child: Text(
-                      _time(row.darimi),
+                      time(Method.sunni),
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: theme.colorScheme.primary,
-                        fontFeatures: const [FontFeature.tabularFigures()],
+                        fontFeatures: tabular,
                       ),
                     ),
                   ),
-                  Expanded(
-                    flex: 3,
-                    child: Text(
-                      _time(row.karachi),
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontFeatures: const [FontFeature.tabularFigures()],
+                  for (final m in [Method.karachi, Method.mujahid])
+                    Expanded(
+                      flex: 3,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            time(m),
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              fontFeatures: tabular,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          _DiffChip(seconds: row.diffFromSunni(m)),
+                        ],
                       ),
                     ),
-                  ),
-                  Expanded(
-                    flex: 3,
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: _DiffChip(seconds: row.diffSeconds),
-                    ),
-                  ),
                 ],
               ),
               if (_open) ...[
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 6,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(6),
+                const SizedBox(height: 8),
+                for (final m in Method.values)
+                  _MethodDetail(row: row, method: m),
+                if (row.note != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      row.note!,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontStyle: FontStyle.italic,
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
-                      child: Text(row.rule, style: theme.textTheme.labelSmall),
                     ),
-                    Text(exact, style: theme.textTheme.bodySmall),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(row.reason, style: theme.textTheme.bodySmall),
+                  ),
               ],
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// One method's rule, exact time and reason inside an opened row.
+class _MethodDetail extends StatelessWidget {
+  const _MethodDetail({required this.row, required this.method});
+
+  final PrayerRow row;
+  final Method method;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final mt = row[method];
+    final diff = row.diffFromSunni(method);
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text(
+                method.label,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color:
+                      method == Method.sunni ? theme.colorScheme.primary : null,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(mt.rule, style: theme.textTheme.labelSmall),
+              ),
+              Text(
+                mt.time == null ? '—' : hms(mt.time!),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+              if (method != Method.sunni && diff != null && diff != 0)
+                Text(
+                  signedDiff(diff),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(
+            mt.reason[0].toUpperCase() + mt.reason.substring(1),
+            style: theme.textTheme.bodySmall,
+          ),
+        ],
       ),
     );
   }
@@ -177,21 +240,29 @@ class _DiffChip extends StatelessWidget {
     final (bg, fg, label) = switch (s) {
       null => (scheme.surfaceContainerHighest, scheme.onSurfaceVariant, '—'),
       0 => (scheme.surfaceContainerHighest, scheme.onSurfaceVariant, 'same'),
-      < 0 => (scheme.tertiaryContainer, scheme.onTertiaryContainer, signedDiff(s)),
-      _ => (scheme.secondaryContainer, scheme.onSecondaryContainer, signedDiff(s)),
+      < 0 => (
+        scheme.tertiaryContainer,
+        scheme.onTertiaryContainer,
+        signedDiff(s),
+      ),
+      _ => (
+        scheme.secondaryContainer,
+        scheme.onSecondaryContainer,
+        signedDiff(s),
+      ),
     };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
         label,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: fg,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: fg,
+          fontFeatures: const [FontFeature.tabularFigures()],
+        ),
       ),
     );
   }

@@ -1,11 +1,11 @@
 {
-    "name": "Prayer Times · Darimi",
+    "name": "Sunni Prayer Times",
     "short_name": "Prayer Times",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#00796B",
     "theme_color": "#00796B",
-    "description": "Prayer times by Darimi's method compared with Karachi, with a step-by-step calculation log.",
+    "description": "Prayer times by the Kerala Sunni (Samastha) method compared with Karachi and Mujahid, with a step-by-step calculation log.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

@@ -10,7 +10,7 @@ class AppSettings extends ChangeNotifier {
   bool manualElevation = false;
   double elevation = 0;
 
-  /// Apply the elevation dip to Darimi's sunrise and Maghrib.
+  /// Apply the elevation dip to the Sunni sunrise and Maghrib.
   bool applyElevation = true;
 
   static const _manualLocation = 'manualLocation';

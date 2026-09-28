@@ -20,7 +20,7 @@ class PrayerApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Prayer Times · Darimi',
+      title: 'Sunni Prayer Times',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(colorSchemeSeed: _seed, useMaterial3: true),
       darkTheme: ThemeData(

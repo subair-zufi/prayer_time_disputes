@@ -29,7 +29,8 @@ class LocationService {
   static Future<Position> current() async {
     if (!await Geolocator.isLocationServiceEnabled()) {
       throw const LocationFailure(
-          'Location services are turned off. Turn them on and try again.');
+        'Location services are turned off. Turn them on and try again.',
+      );
     }
     var permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {

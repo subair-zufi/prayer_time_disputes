@@ -40,24 +40,28 @@ class LogView extends StatelessWidget {
     for (final l in result.log) {
       switch (l.kind) {
         case LogKind.header:
-          spans.add(TextSpan(
-            text: '${spans.isEmpty ? '' : '\n'}== ${l.text} ==\n',
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              color: scheme.primary,
+          spans.add(
+            TextSpan(
+              text: '${spans.isEmpty ? '' : '\n'}== ${l.text} ==\n',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: scheme.primary,
+              ),
             ),
-          ));
+          );
         case LogKind.line:
           spans.add(TextSpan(text: '${l.text}\n'));
         case LogKind.note:
           final wrapped = _wrap(l.text, 72);
-          spans.add(TextSpan(
-            text: '   » ${wrapped.join('\n     ')}\n',
-            style: TextStyle(
-              fontStyle: FontStyle.italic,
-              color: scheme.onSurfaceVariant,
+          spans.add(
+            TextSpan(
+              text: '   » ${wrapped.join('\n     ')}\n',
+              style: TextStyle(
+                fontStyle: FontStyle.italic,
+                color: scheme.onSurfaceVariant,
+              ),
             ),
-          ));
+          );
       }
     }
 
@@ -76,9 +80,9 @@ class LogView extends StatelessWidget {
               onPressed: () async {
                 await Clipboard.setData(ClipboardData(text: result.logText));
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Log copied')),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text('Log copied')));
                 }
               },
             ),

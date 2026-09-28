@@ -127,28 +127,31 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _shiftDate(int days) => setState(
-      () => _date = DateTime(_date.year, _date.month, _date.day + days));
+    () => _date = DateTime(_date.year, _date.month, _date.day + days),
+  );
 
   CalcResult _calculate() {
     final noon = DateTime(_date.year, _date.month, _date.day, 12);
-    return calculatePrayerTimes(CalcInput(
-      date: _date,
-      latitude: _lat!,
-      longitude: _lon!,
-      timezone: noon.timeZoneOffset.inMinutes / 60,
-      elevation: _elevation,
-      applyElevation: _settings.applyElevation,
-      locationSource: _locationSource,
-      elevationSource: _elevationSource,
-      timezoneSource: 'device, ${noon.timeZoneName}',
-    ));
+    return calculatePrayerTimes(
+      CalcInput(
+        date: _date,
+        latitude: _lat!,
+        longitude: _lon!,
+        timezone: noon.timeZoneOffset.inMinutes / 60,
+        elevation: _elevation,
+        applyElevation: _settings.applyElevation,
+        locationSource: _locationSource,
+        elevationSource: _elevationSource,
+        timezoneSource: 'device, ${noon.timeZoneName}',
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Prayer Times · Darimi'),
+        title: const Text('Sunni Prayer Times'),
         actions: [
           IconButton(
             tooltip: 'Settings',
@@ -160,47 +163,44 @@ class _HomePageState extends State<HomePage> {
       body: SafeArea(
         child: switch (_phase) {
           _Phase.starting ||
-          _Phase.loading =>
-            const Center(child: CircularProgressIndicator()),
+          _Phase.loading => const Center(child: CircularProgressIndicator()),
           _Phase.askPermission => _Message(
-              icon: Icons.location_on_outlined,
-              title: 'Allow location',
-              text: 'Prayer times depend on where you are. The app uses your '
-                  'location to calculate Darimi and Karachi times for your '
-                  'exact position.\n\nElevation is then looked up online from '
-                  'your coordinates (Open-Meteo, free, no API key).',
-              actions: [
-                FilledButton.icon(
-                  onPressed: _resolve,
-                  icon: const Icon(Icons.my_location),
-                  label: const Text('Allow location'),
-                ),
-                TextButton(
-                  onPressed: _openSettings,
-                  child: const Text('Enter location manually'),
-                ),
-              ],
-            ),
+            icon: Icons.location_on_outlined,
+            title: 'Allow location',
+            text:
+                'Prayer times depend on where you are. The app uses your '
+                'location to calculate Sunni, Karachi and Mujahid times for your '
+                'exact position.\n\nElevation is then looked up online from '
+                'your coordinates (Open-Meteo, free, no API key).',
+            actions: [
+              FilledButton.icon(
+                onPressed: _resolve,
+                icon: const Icon(Icons.my_location),
+                label: const Text('Allow location'),
+              ),
+              TextButton(
+                onPressed: _openSettings,
+                child: const Text('Enter location manually'),
+              ),
+            ],
+          ),
           _Phase.error => _Message(
-              icon: Icons.location_off_outlined,
-              title: 'No location',
-              text: _error ?? 'Something went wrong.',
-              actions: [
-                FilledButton(
-                  onPressed: _resolve,
-                  child: const Text('Try again'),
+            icon: Icons.location_off_outlined,
+            title: 'No location',
+            text: _error ?? 'Something went wrong.',
+            actions: [
+              FilledButton(onPressed: _resolve, child: const Text('Try again')),
+              if (_canOpenSettings)
+                OutlinedButton(
+                  onPressed: Geolocator.openAppSettings,
+                  child: const Text('Open app settings'),
                 ),
-                if (_canOpenSettings)
-                  OutlinedButton(
-                    onPressed: Geolocator.openAppSettings,
-                    child: const Text('Open app settings'),
-                  ),
-                TextButton(
-                  onPressed: _openSettings,
-                  child: const Text('Enter location manually'),
-                ),
-              ],
-            ),
+              TextButton(
+                onPressed: _openSettings,
+                child: const Text('Enter location manually'),
+              ),
+            ],
+          ),
           _Phase.ready => _buildResult(context, _calculate()),
         },
       ),
@@ -227,20 +227,23 @@ class _HomePageState extends State<HomePage> {
                   children: [
                     _InfoRow(
                       icon: Icons.place_outlined,
-                      text: '${input.latitude.toStringAsFixed(6)}, '
+                      text:
+                          '${input.latitude.toStringAsFixed(6)}, '
                           '${input.longitude.toStringAsFixed(6)}',
                       detail: _locationSource,
                     ),
                     _InfoRow(
                       icon: Icons.terrain_outlined,
                       text: 'Elevation ${input.elevation.toStringAsFixed(0)} m',
-                      detail: _settings.applyElevation
-                          ? _elevationSource
-                          : '$_elevationSource · not applied',
+                      detail:
+                          _settings.applyElevation
+                              ? _elevationSource
+                              : '$_elevationSource · not applied',
                     ),
                     _InfoRow(
                       icon: Icons.schedule,
-                      text: 'Time zone ${tz < 0 ? '−' : '+'}'
+                      text:
+                          'Time zone ${tz < 0 ? '−' : '+'}'
                           '${tz.abs().toStringAsFixed(2)} h',
                       detail: input.timezoneSource,
                     ),
@@ -259,8 +262,9 @@ class _HomePageState extends State<HomePage> {
                         padding: const EdgeInsets.only(top: 4, right: 8),
                         child: Text(
                           _elevationWarning!,
-                          style: theme.textTheme.bodySmall
-                              ?.copyWith(color: theme.colorScheme.error),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.error,
+                          ),
                         ),
                       ),
                     Align(
@@ -315,15 +319,29 @@ class _HomePageState extends State<HomePage> {
 
 const _weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const _months = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
 ];
 
 String _formatDate(DateTime d) =>
     '${_weekdays[d.weekday - 1]}, ${d.day} ${_months[d.month - 1]} ${d.year}';
 
 class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.icon, required this.text, required this.detail});
+  const _InfoRow({
+    required this.icon,
+    required this.text,
+    required this.detail,
+  });
 
   final IconData icon;
   final String text;
@@ -341,15 +359,17 @@ class _InfoRow extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text.rich(
-              TextSpan(children: [
-                TextSpan(text: text, style: theme.textTheme.bodyMedium),
-                TextSpan(
-                  text: '  $detail',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+              TextSpan(
+                children: [
+                  TextSpan(text: text, style: theme.textTheme.bodyMedium),
+                  TextSpan(
+                    text: '  $detail',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
-                ),
-              ]),
+                ],
+              ),
             ),
           ),
         ],
@@ -389,10 +409,7 @@ class _Message extends StatelessWidget {
               Text(text, textAlign: TextAlign.center),
               const SizedBox(height: 24),
               for (final a in actions)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: a,
-                ),
+                Padding(padding: const EdgeInsets.only(bottom: 8), child: a),
             ],
           ),
         ),
