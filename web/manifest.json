@@ -1,0 +1,35 @@
+{
+    "name": "Prayer Times · Darimi",
+    "short_name": "Prayer Times",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#00796B",
+    "theme_color": "#00796B",
+    "description": "Prayer times by Darimi's method compared with Karachi, with a step-by-step calculation log.",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
