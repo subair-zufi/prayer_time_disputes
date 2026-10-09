@@ -73,7 +73,8 @@ class Rules {
   /// Horizon dip in degrees per √metre of elevation.
   static const dipPerSqrtMetre = 0.0347;
 
-  /// Rafi: sunset about 1 min later for every 1500 m of height.
+  /// Rafi: sunset 1 min later and sunrise 1 min earlier for every 1500 m of
+  /// height. Used for Mujahid sunrise and Maghrib.
   static const rafiMetresPerMinute = 1500.0;
 }
 
@@ -163,7 +164,8 @@ class CalcInput {
   /// Metres above sea level.
   final double elevation;
 
-  /// Apply the elevation dip to the Sunni sunrise and Maghrib.
+  /// Apply the elevation dip to the Sunni sunrise and Maghrib. Mujahid always
+  /// uses Rafi's 1 min per 1500 m.
   final bool applyElevation;
 
   final String locationSource;
@@ -365,6 +367,9 @@ CalcResult calculatePrayerTimes(CalcInput input) {
   final useDip = input.applyElevation && dip > 0;
   final rafiElevationSeconds =
       math.max(0, input.elevation) / Rules.rafiMetresPerMinute * 60;
+  final rafiShift = rafiElevationSeconds / 3600;
+  final useRafi = rafiShift > 0;
+  final rafiText = '${rafiElevationSeconds.toStringAsFixed(1)} s';
 
   // ── Fajr ──────────────────────────────────────────────────────────────
   header('Step 5 · Fajr (Subh)');
@@ -430,6 +435,17 @@ CalcResult calculatePrayerTimes(CalcInput input) {
   }
   line(haLine('Karachi', -Rules.sunset, sunHa, plainSunrise));
   line(haLine('Mujahid', -Rules.sunset, sunHa, plainSunrise));
+  final mSunrise =
+      plainSunrise == null || !useRafi
+          ? plainSunrise
+          : plainSunrise - rafiShift;
+  if (useRafi && mSunrise != null) {
+    line(
+      '${'Mujahid'.padRight(15)} − ${input.elevation.toStringAsFixed(1)} m '
+      '÷ ${Rules.rafiMetresPerMinute.round()} m/min = − $rafiText → '
+      '${hms(mSunrise)}',
+    );
+  }
   addRow(
     PrayerRow(
       prayer: Prayer.sunrise,
@@ -451,11 +467,10 @@ CalcResult calculatePrayerTimes(CalcInput input) {
               'Elevation ignored.',
         ),
         Method.mujahid: MethodTime(
-          plainSunrise,
-          '0.833°',
-          'same 0.833°. Rafi puts elevation at about 1 min per 1500 m '
-              '(${rafiElevationSeconds.toStringAsFixed(1)} s here), so it is '
-              'ignored.',
+          mSunrise,
+          useRafi ? '0.833° − height' : '0.833°',
+          'per Rafi, sun 0.833° below the horizon, then 1 min earlier for '
+          'every 1500 m of height ($rafiText earlier here).',
         ),
       },
     ),
@@ -550,6 +565,15 @@ CalcResult calculatePrayerTimes(CalcInput input) {
   final plainSunset = evening(sunHa);
   line(haLine('Karachi', -Rules.sunset, sunHa, plainSunset));
   line(haLine('Mujahid', -Rules.sunset, sunHa, plainSunset));
+  final mMaghrib =
+      plainSunset == null || !useRafi ? plainSunset : plainSunset + rafiShift;
+  if (useRafi && mMaghrib != null) {
+    line(
+      '${'Mujahid'.padRight(15)} + ${input.elevation.toStringAsFixed(1)} m '
+      '÷ ${Rules.rafiMetresPerMinute.round()} m/min = + $rafiText → '
+      '${hms(mMaghrib)}',
+    );
+  }
   addRow(
     PrayerRow(
       prayer: Prayer.maghrib,
@@ -567,10 +591,12 @@ CalcResult calculatePrayerTimes(CalcInput input) {
           'sunset, sun 0.833° below the horizon. Elevation ignored.',
         ),
         Method.mujahid: MethodTime(
-          plainSunset,
-          '90°50′',
+          mMaghrib,
+          useRafi ? '90°50′ + height' : '90°50′',
           'per Rafi, zenith distance 90°50′ (= 0.833°), when the whole disc is '
-              'below the horizon; calendar seconds are rounded up to the minute.',
+          'below the horizon, then 1 min later for every 1500 m of height '
+          '($rafiText later here); calendar seconds are rounded up to the '
+          'minute.',
         ),
       },
     ),
@@ -652,9 +678,9 @@ CalcResult calculatePrayerTimes(CalcInput input) {
   if (input.elevation > 0 && plainSunrise != null && dipSunrise != null) {
     final standard = toSeconds(plainSunrise) - toSeconds(dipSunrise);
     note(
-      'Conflict: Rafi puts elevation at about 1 min per 1500 m '
-      '(${rafiElevationSeconds.toStringAsFixed(1)} s here). The standard '
-      'dip formula gives ${signedDiff(standard).replaceFirst('+', '')} '
+      'Conflict: Rafi puts elevation at 1 min per 1500 m '
+      '($rafiText here, used for Mujahid). The standard dip formula gives '
+      '${signedDiff(standard).replaceFirst('+', '')} '
       'here${useDip ? ' and is used for Sunni' : ' (turned off)'}.',
     );
   }

@@ -171,7 +171,8 @@ class _SettingsPageState extends State<SettingsPage> {
                   title: const Text('Apply elevation to Sunni times'),
                   subtitle: const Text(
                     'Sunrise earlier and Maghrib later by the horizon dip '
-                    '(0.0347 × √h degrees). Karachi never uses elevation.',
+                    '(0.0347 × √h degrees). Karachi never uses elevation; '
+                    'Mujahid always uses Rafi\'s 1 min per 1500 m.',
                   ),
                   value: _applyElevation,
                   onChanged: (v) => setState(() => _applyElevation = v),
@@ -198,7 +199,8 @@ class _SettingsPageState extends State<SettingsPage> {
                   subtitle: Text(
                     'Fajr 18° · Maghrib = sunset (90°50′ = 0.833°) '
                     '· Isha 18° · Asr: shadow = length + noon shadow · '
-                    'elevation ignored\n'
+                    'elevation: 1 min per 1500 m (sunrise earlier, Maghrib '
+                    'later)\n'
                     'Sources: T.P.M. Rafi, Shabab Weekly; Darimi\'s account. '
                     'The log also shows Rafi\'s preferred Fajr at 16.5°.',
                   ),
